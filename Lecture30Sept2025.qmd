@@ -1,0 +1,76 @@
+---
+title: "Lecture30Sept2025"
+author: "Maya Powell"
+date: "September 30 2025"
+date-modified: today
+format:
+  html:
+    toc: true
+#    theme: darkly
+editor: visual
+warning: false
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+```{r}
+#| warning: false
+```
+
+If you put warning: false into your initial yaml then it'll be true for all of them (Nyssa does this usually for warnings and )
+
+You can set your default for all your figure sizes etc as well
+
+If you just do it in one code chunk it'll only do it for that file
+
+Here are all the possible things you can do in this link from quarto:
+
+\[quarto list\] (https://https://quarto.org/docs/reference/)
+
+## Introduction
+
+I'm going to make my first *Quarto* document to be able to run some code about penguins yay
+
+### Loading libraries
+
+```{r}
+#| echo: false
+library(here)
+library(tidyverse)
+#library(beepr) #you can use this to ding when your code is done
+library(palmerpenguins)
+```
+
+### Look at data
+
+```{r}
+glimpse(penguins)
+```
+
+### Make a plot
+
+Relationship between bill length and bill depth
+
+```{r}
+ggplot(penguins, aes(bill_length_mm,bill_depth_mm,color = species)) +
+  geom_point()
+```

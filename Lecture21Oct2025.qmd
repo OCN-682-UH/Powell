@@ -1,0 +1,25 @@
+---
+title: "Lecture21Oct2025"
+author: "Maya Powell"
+date: "October 21 2025"
+date-modified: today
+format:
+  html:
+    toc: true
+#    theme: darkly
+editor: visual
+warning: false
+---
+
+## Working with Factors
+
+#### Load libraries and data
+
+```{r}
+library(tidyverse)
+library(here)
+
+#tuesdata <- tidytuesdayR::tt_load(2021, week = 7)
+#income_mean<-tuesdata$income_mean
+income_mean <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-02-09/income_mean.csv')
+```

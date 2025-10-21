@@ -1,0 +1,230 @@
+---
+title: "Lecture14Oct2025"
+author: "Maya Powell"
+date: "October 14 2025"
+date-modified: today
+format:
+  html:
+    toc: true
+#    theme: darkly
+editor: visual
+warning: false
+---
+
+## Setup script
+
+Install packages and load libraries
+
+```{r}
+#| echo: false
+install.packages('tidytext')
+install.packages('wordcloud2')
+install.packages('janeaustenr')
+install.packages('stopwords')
+library(here)
+library(tidyverse)
+library(tidytext)
+library(wordcloud2)
+library(janeaustenr)
+```
+
+### Lecture Notes:
+
+#### Manipulation
+
+All stringr package calls start with str_verbthatyouwantodo e.g. str_sub (substitute), str_trim etc
+
+```{r}
+paste("High temp", "Low pH")
+paste("High temp", "Low pH", sep = "-") #add dash in between words
+paste0("High temp", "Low pH") #no space in between
+
+shapes <- c("square", "triangle", "circle")
+paste("My favorite shape is a", shapes)
+
+cities <- c("best", "worst")
+paste("It was the", cities, "of times")
+
+str_length(shapes) #how many letters are in each word
+
+seq <- c("ATCCCGTC")
+str_sub(seq, start = 2, end = 4) #extract 2nd to 4th
+
+str_sub(seq, start = 3, end = 3) <- "A" #add an A in the 3rd position
+
+str_dup(seq, times = c(2,3)) #duplicate twice then 3x
+
+```
+
+#### Whitespace tools
+
+```{r}
+bad <- c("H", "H", "H ", "L", "L")
+bad
+
+str_trim(bad) #removes whitespace from both left and right sides
+str_trim(bad, side = "left") #only removes from specified side
+
+str_pad(bad, 5, side = "right") #adds # of characters to make it 5
+
+str_pad(bad, 5, side = "right", pad = "1") # add a 1 to the right side after the 5th character
+
+```
+
+#### Locale sensitive operations
+
+```{r}
+x<-"I love R!"
+str_to_upper(x) #make uppercase
+str_to_lower(x) #or lowercase
+str_to_title(x) #or titlecase
+
+```
+
+#### Pattern matching
+
+https://rstudio.github.io/cheatsheets/regex.pdf \<- cheat sheet!!
+
+```{r}
+data<-c("AAA", "TATA", "CTAG", "GCTT")
+
+str_view(data, pattern = "A") #find all the strings with an A
+
+str_detect(data, pattern = "A") #detect pattern - can then filter if T/F for A
+
+str_detect(data, pattern = "AT") #more info
+
+str_locate(data, pattern = "AT") #find where it is (from 2nd letter to 3rd letter)
+```
+
+#### Regex (regular expressions)
+
+Metacharacters, sequences, quantifiers, character classes, POSIX character classes
+
+. ? ! \| etc.
+
+In order to find these you have to "escape" the character meaning in R
+
+```{r}
+vals<-c("a.b", "b.c","c.d")
+str_replace(vals, "\\.", " ") #\\ = "escape", allows us to replace the period with a space
+
+vals<-c("a.b.c", "b.c.d","c.d.e")
+str_replace(vals, "\\.", " ") #string, pattern, replace only does the first
+str_replace_all(vals, "\\.", " ") #this does all
+
+```
+
+Sequences
+
+Anchor sequences - see cheat sheet, e.g. d = digit character, D = non-digit character, w = word, W = non-word, etc.
+
+Quick way to subset something that either does or doesn't contain numbers or words
+
+```{r}
+val2<-c("test 123", "test 456", "test")
+str_subset(val2, "\\d")
+```
+
+Character class
+
+\[0123456709\] = match any digit
+
+\[\^aeiou\] = anything BUT aeiou
+
+```{r}
+str_count(val2, "[aeiou]") #count any vowel
+str_count(val2, "[0-9]") #count any digit
+```
+
+| symbol | Meaning                     |
+|--------|-----------------------------|
+| \^     | Beginning of String         |
+| \$     | End of String               |
+| \\n    | Newline                     |
+| \+     | One or More of Previous     |
+| \*     | Zero or More of Previous    |
+| ?      | Zero or One of Previous     |
+| {5}    | Exactly 5 of Previous       |
+| {2, 5} | Between 2 and 5 or Previous |
+| {2, }  | More than 2 of Previous     |
+
+```{r}
+strings<-c("550-153-7578",
+         "banana",
+         "435.114.7586",
+         "home: 672-442-6739")
+
+phone <- "([2-9][0-9]{2})[- .]([0-9]{3})[- .]([0-9]{4})"
+
+str_detect(strings, phone)
+
+test <- str_subset(strings, phone)
+test
+
+phones <- test %>%
+  str_replace_all("[a-z]","") %>%
+  str_replace_all("\\:","") %>%
+  str_replace_all("\\.", "-") %>%
+  str_trim()
+phones
+```
+
+#### Tidytext
+
+```{r}
+original_books <- austen_books() %>% # get all of Jane Austen's books
+  group_by(book) %>%
+  mutate(line = row_number(), # find every line
+         chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]", # count the chapters (starts with the word chapter followed by a digit or roman numeral)
+                                                 ignore_case = TRUE)))) %>% #ignore lower or uppercase - this is new! very cool!
+  ungroup() # ungroup it so we have a dataframe again
+# don't try to view the entire thing... its >73000 lines...
+head(original_books)
+
+
+tidy_books <- original_books %>%
+  unnest_tokens(output = word, input = text) # add a column named word, with the input as the text column
+head(tidy_books) # there are now >725,000 rows. Don't view the entire thing!
+
+
+head(get_stopwords()) #example - the, but, and etc etc.
+
+cleaned_books <- tidy_books %>%
+  anti_join(get_stopwords()) # dataframe without the stopwords
+
+head(cleaned_books)
+
+cleaned_books %>% #sort the most common words in her books
+  count(word, sort = TRUE)
+
+```
+
+Look at certain words or characteristics of words
+
+```{r}
+#get sentiments of words (common in social science)
+sent_word_counts <- tidy_books %>%
+  inner_join(get_sentiments()) %>% # only keep pos or negative words
+  count(word, sentiment, sort = TRUE) # count them
+head(sent_word_counts)[1:3,]
+
+sent_word_counts %>%
+  filter(n > 150) %>% # take only if there are over 150 instances of it
+  mutate(n = ifelse(sentiment == "negative", -n, n)) %>% # add a column where if the word is negative make the count negative
+  mutate(word = reorder(word, n)) %>% # sort it so it goes from largest to smallest
+  ggplot(aes(word, n, fill = sentiment)) +
+  geom_col() +
+  coord_flip() +
+  labs(y = "Contribution to sentiment")
+```
+
+Make an interactive wordcloud
+
+```{r}
+words<-cleaned_books %>%
+  count(word) %>% # count all the words
+  arrange(desc(n))%>% # sort the words
+  slice(1:100) #take the top 100
+wordcloud2(words, shape = 'triangle', size=0.3) # make a wordcloud out of the top 100 words
+```
