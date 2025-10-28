@@ -1,0 +1,151 @@
+---
+title: "Lecture21Oct2025"
+author: "Maya Powell"
+date: "October 28 2025"
+date-modified: today
+format:
+  html:
+    toc: true
+#    theme: darkly
+editor: visual
+warning: false
+---
+
+## Working with Factors
+
+#### Load libraries and set up data
+
+```{r}
+library(tidyverse)
+library(here)
+
+set.seed(8)
+
+df <- tibble(
+  a = rnorm(10), # draws 10 random values from a normal distribution
+  b = rnorm(10),
+  c = rnorm(10),
+  d = rnorm(10)
+)
+head(df)
+```
+
+Mutate data - rescale every column individually - booo
+
+```{r}
+df<-df %>%
+  mutate(a = (a-min(a, na.rm = TRUE))/(max(a, na.rm = TRUE)-min(a, na.rm = TRUE)))
+
+df<-df %>%
+  mutate(a = (a-min(a, na.rm = TRUE))/(max(a, na.rm = TRUE)-min(a, na.rm = TRUE)),
+         b = (b-min(b, na.rm = TRUE))/(max(a, na.rm = TRUE)-min(b, na.rm = TRUE)), #UH OH MISTAKE!! don't need to copy/paste - instead lets write a function
+         c = (c-min(c, na.rm = TRUE))/(max(c, na.rm = TRUE)-min(c, na.rm = TRUE)),
+         d = (d-min(d, na.rm = TRUE))/(max(d, na.rm = TRUE)-min(d, na.rm = TRUE)))
+```
+
+#### Write functions
+
+Instead let's write a function to help us do this! yayyyy
+
+You can do mutate_all to do all lines, mutate_at for certain lines, or mutate_if for conditional ones
+
+```{r}
+rescale01 <- function(x) {
+  value<-(x-min(x, na.rm = TRUE))/(max(x, na.rm = TRUE)-min(x, na.rm = TRUE))
+  return(value)
+}
+
+df %>%
+  mutate(a = rescale01(a),
+         b = rescale01(b),
+         c = rescale01(c),
+         d = rescale01(d))
+
+df %>%
+  mutate_all(rescale01)
+```
+
+Make a function to convert °C to °F
+
+```{r}
+F_to_C <- function(temp_F) { 
+  temp_C <- (temp_F - 32) * 5 / 9 
+  return(temp_C)
+}
+
+F_to_C(32)
+F_to_C(212)
+```
+
+Make sure to always test your function for an expected output
+
+Now make one for °C to K
+
+```{r}
+C_to_K <- function(temp_C) { 
+  temp_K <- (temp_C + 273.15) 
+  return(temp_K)
+}
+
+C_to_K(0)
+C_to_K(100)
+```
+
+#### Make plots into a function
+
+First make a line plot
+
+```{r}
+library(palmerpenguins)
+library(PNWColors) # for the PNW color palette 
+# you may need to install the PNWColors library if you haven't used it yet
+pal<-pnw_palette("Lake",3, type = "discrete") # my color palette 
+ggplot(penguins, aes(x = body_mass_g, y = bill_length_mm, color = island))+
+  geom_point()+
+  geom_smooth(method = "lm")+ # add a linear model
+  scale_color_manual("Island", values=pal)+   # use pretty colors and another example of how to manually change the legend title for colors
+  theme_bw()
+```
+
+Now make it into a function
+
+here we have to use a curly-curly:\
+{rlang} uses what is literally called a"curly-curly" {{}} to help us assign variables that are column names in dataframes.
+
+Here we add curly-curlies to the column names
+
+```{r}
+myplot<-function(data, x, y){ 
+pal<-pnw_palette("Lake",3, type = "discrete") # my color palette 
+ggplot(data, aes(x = {{x}}, y = {{y}} , color = island))+
+  geom_point()+
+  geom_smooth(method = "lm")+ # add a linear model
+  scale_color_manual("Island", values=pal)+   # use pretty colors and change the legend title
+  theme_bw()
+}
+
+#make a plot
+myplot(data = penguins, x = body_mass_g, y = bill_length_mm)
+
+#now make another plot
+#just make sure it's continuous data
+myplot(data = penguins, x = body_mass_g, y = flipper_length_mm)
+
+```
+
+Adding defaults
+
+Make it specific to the dataset
+
+```{r}
+myplot<-function(data = penguins, x, y){
+pal<-pnw_palette("Lake",3, type = "discrete") # my color palette 
+ggplot(data, aes(x = {{x}}, y = {{y}} , color = island))+
+  geom_point()+
+  geom_smooth(method = "lm")+ # add a linear model
+  scale_color_manual("Island", values=pal)+   # use pretty colors and change the legend title
+  theme_bw()
+}
+
+myplot(x = body_mass_g, y = flipper_length_mm)
+```
