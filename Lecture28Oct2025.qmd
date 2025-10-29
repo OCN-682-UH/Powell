@@ -147,5 +147,78 @@ ggplot(data, aes(x = {{x}}, y = {{y}} , color = island))+
   theme_bw()
 }
 
+myplot(x = body_mass_g, y = flipper_length_mm) #this assumes that data is penguins dataset, you can still change the dataset but this makes it easier for you
+
+#you can still layer on to this like any other ggplot code to add labels here etc
+myplot(x = body_mass_g, y = flipper_length_mm)+
+  labs(x = "Body mass (g)",
+       y = "Flipper length (mm)")
+```
+
+#### If-else statements in functions
+
+```{r}
+a <- 4
+b <- 5
+
+if (a > b) { # my question
+  f <- 20 # if it is true give me answer 1
+    } else { # else give me answer 2
+  f <- 10
+    }
+
+f
+
+```
+
+Plotting with if-else statements
+
+Using if\...else\... we can make our function even more flexible. Let's say we want the option of adding the geom_smooth lines. We can create a variable that if set to TRUE add the geom_smooth, otherwise print without.
+
+First add a new argument for lines and make the default TRUE for ease
+
+```{r}
+myplot<-function(data = penguins, x, y ,lines=TRUE ){ # add new argument for lines
+pal<-pnw_palette("Lake",3, type = "discrete") # my color palette 
+ggplot(data, aes(x = {{x}}, y = {{y}} , color = island))+
+  geom_point()+
+  geom_smooth(method = "lm")+ # add a linear model
+  scale_color_manual("Island", values=pal)+   # use pretty colors and change the legend title
+  theme_bw()
+}
+
+#Next, add an if-else statement
+
+myplot<-function(data = penguins, x, y, lines=TRUE ){ # add new argument for lines
+pal<-pnw_palette("Lake",3, type = "discrete") # my color palette 
+if(lines==TRUE){
+ggplot(data, aes(x = {{x}}, y = {{y}} , color = island))+
+  geom_point()+
+  geom_smooth(method = "lm")+ # add a linear model
+  scale_color_manual("Island", values=pal)+   # use pretty colors and change the legend title
+  theme_bw()
+}
+else{
+ggplot(data, aes(x = {{x}}, y = {{y}} , color = island))+
+  geom_point()+
+  scale_color_manual("Island", values=pal)+   # use pretty colors and change the legend title
+  theme_bw()
+}
+}
+
+#and test it out
 myplot(x = body_mass_g, y = flipper_length_mm)
+
+myplot(x = body_mass_g, y = flipper_length_mm, lines = FALSE)
+
+```
+
+A new fun r package
+
+```{r}
+devtools::install_github("itsrainingdata/emokid")
+library(emokid)
+iamsad()
+iamlesssad()
+mymood()
 ```
